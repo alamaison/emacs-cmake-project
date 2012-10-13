@@ -1,7 +1,7 @@
 Emacs CMake project mode
 ==========
 
-This minor-mode integrates the CMake build process into the Emacs ecosystem.
+A minor-mode integrating the CMake build process with the Emacs ecosystem.
 
 Why?
 ----------
@@ -55,6 +55,6 @@ in question.  CMake doesn't provide a way to build one file at a time
 (or at least we don't know of a way) so we must build everything.
 
 
-[1] http://www.cmake.org/CMakeDocs/cmake-mode.el
-[2] http://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation.html
-[3] http://www.gnu.org/software/emacs/manual/html_node/flymake/index.html
+[1]: http://www.cmake.org/CMakeDocs/cmake-mode.el
+[2]: http://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation.html
+[3]: http://www.gnu.org/software/emacs/manual/html_node/flymake/index.html
