@@ -17,7 +17,8 @@ is left to the major-mode [`cmake-mode`][1].
 Installing
 ----------
 
-Copy this file somewhere on your Emacs load path.
+Copy this file somewhere on your Emacs load path or use [Marmalade][2]
+and the package manager to install it.
 
 Either auto-load the mode in your init file by adding the line:
 
@@ -41,13 +42,13 @@ Features
 
 # The compile command #
 
-This mode makes the [compile command][2], `M-x compile`, build the
+This mode makes the [compile command][3], `M-x compile`, build the
 project by default via CMake in a `bin` subdirectory of the project
 source root directory.
 
 # Flymake #
 
-This mode integrates with [Flymake][3] so that, when `flymake-mode` is
+This mode integrates with [Flymake][4] so that, when `flymake-mode` is
 enabled, the entire project is built whenever the buffer is saved and
 any errors are higlighted in the buffer.  This is different from
 Flymake's typical behaviour which builds only the file for the buffer
@@ -56,5 +57,6 @@ in question.  CMake doesn't provide a way to build one file at a time
 
 
 [1]: http://www.cmake.org/CMakeDocs/cmake-mode.el
-[2]: http://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation.html
-[3]: http://www.gnu.org/software/emacs/manual/html_node/flymake/index.html
+[2]: http://marmalade-repo.org/
+[3]: http://www.gnu.org/software/emacs/manual/html_node/emacs/Compilation.html
+[4]: http://www.gnu.org/software/emacs/manual/html_node/flymake/index.html

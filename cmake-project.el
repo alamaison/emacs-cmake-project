@@ -1,10 +1,11 @@
-;;; cmake-project.el -- integrates C/C++ projects that use CMake with Emacs
+;;; cmake-project.el --- Integrates CMake build process with Emacs
 
 ;; Copyright (C) 2012 Alexander Lamaison
 
 ;; Author:  Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; Maintainer: Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
-;; Version: 0.1
+;; URL: http://github.com/alamaison/emacs-cmake-project
+;; Version: 0.2
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -23,7 +24,7 @@
 ;;; Commentary:
 ;;
 ;; Projects using CMake do not integrate well into the Emacs ecosystem
-;; which often assumes the existsnce of Makefiles.  This library
+;; which often assumes the existence of Makefiles.  This library
 ;; improves that situation somewhat.
 ;;
 
@@ -137,3 +138,5 @@ build tools such as the CompileCommand and Flymake."
     (ad-activate 'flymake-get-file-name-mode-and-masks))))
 
 (provide 'cmake-project)
+
+;;; cmake-project.el ends here
