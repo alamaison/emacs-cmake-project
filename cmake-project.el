@@ -5,7 +5,7 @@
 ;; Author:  Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; Maintainer: Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; URL: http://github.com/alamaison/emacs-cmake-project
-;; Version: 0.2
+;; Version: 0.3
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -40,7 +40,7 @@
 ;;; Code:
 
 ; Based on `upward-find-file' at http://emacswiki.org/emacs/CompileCommand
-(defun upward-find-last-file (filename &optional startdir)
+(defun cmake-project--upward-find-last-file (filename &optional startdir)
   "Move up directories until we stop finding a certain
 filename. When we stop finding it, return the last directory in
 which we found it. If the starting directory doesn't include it,
