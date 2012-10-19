@@ -40,6 +40,12 @@ file whose directory includes a `CMakeLists.txt`:
 Features
 ----------
 
+# Configuring build tree #
+
+Use `M-x cmake-project-configure-project' to configure or reconfigure
+a CMake build tree.  The function finds the source automatically based
+on the current buffer.
+
 # The compile command #
 
 This mode makes the [compile command][3], `M-x compile`, build the

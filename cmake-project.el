@@ -5,7 +5,7 @@
 ;; Author:  Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; Maintainer: Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; URL: http://github.com/alamaison/emacs-cmake-project
-;; Version: 0.3
+;; Version: 0.4
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -36,6 +36,14 @@
 ;;         any user changes to build directory
 ;; - TODO: Find a better way to support header-only directories with
 ;;         no CMakeLists.txt.
+
+;;; History:
+
+;; 0.1 - Initial version with compile command and Flymake support
+;; 0.2 - Made compatible with Marmalade
+;; 0.3 - Bug fixes
+;; 0.4 - Command to configure new CMake build tree
+;;
 
 ;;; Code:
 
@@ -72,28 +80,52 @@ return nil. Start at startdir or . if startdir not given"
 
 (defun cmake-project-find-root-directory ()
   "Find the top-level CMake directory."
-  (cmake-project--upward-find-last-file "CMakeLists.txt"))
+  (file-name-as-directory
+   (cmake-project--upward-find-last-file "CMakeLists.txt")))
+
+(defcustom cmake-project-default-build-dir-name "bin/"
+  "Default name for CMake build tree directories."
+  :type 'directory
+  :group 'data)
+
+(defvar cmake-project-build-directory nil
+  "Current configured build directory for current buffer.")
+
+(defun cmake-project--changed-build-directory (new-build-directory)
+  (unless new-build-directory
+    (error "Build directory was not set"))
+  (setq cmake-project-build-directory new-build-directory)
+  (setq compile-command (cmake-project-current-build-command))
+  ;; Rerun flymake if the mode is enabled
+  (when (local-variable-p 'flymake-mode (current-buffer))
+    (flymake-mode-off)
+    (flymake-mode-on)))
 
 (defun cmake-project-find-build-directory ()
   "Return an already-configured CMake build directory based on
 current directory."
-  (concat (file-name-as-directory (cmake-project-find-root-directory)) "bin"))
+  (concat (file-name-as-directory (cmake-project-find-root-directory))
+          cmake-project-default-build-dir-name))
 
 (defun cmake-project-current-build-command ()
   "Command line to compile current project as configured in the
 build directory."
   (concat "cmake --build "
-          (shell-quote-argument (cmake-project-find-build-directory))))
+          (shell-quote-argument (expand-file-name
+                                 cmake-project-build-directory))))
+
+;; Build command directory extraction regexp.  Might be useful some day:
+;; "cmake\\s-+--build\\s-+\\(?:\"\\([^\"]*\\)\\\"\\|\\(\\S-*\\)\\)"
 
 (defun cmake-project-flymake-init ()
   (list (executable-find "cmake")
-        (list "--build" (cmake-project-find-build-directory))))
+        (list "--build" (expand-file-name cmake-project-build-directory))))
 
 (defadvice flymake-get-file-name-mode-and-masks (around cmake-flymake-advice)
   "Override default flymake initialisers for C/C++ source files."
   (let ((flymake-allowed-file-name-masks
-	 (append (list '(".[ch]\\(pp\\)?\\'$" cmake-project-flymake-init))
-		 flymake-allowed-file-name-masks)))
+         (append (list '(".[ch]\\(pp\\)?\\'$" cmake-project-flymake-init))
+                 flymake-allowed-file-name-masks)))
     ad-do-it))
 
 (defadvice flymake-post-syntax-check (before cmake-flymake-post-syntax-check)
@@ -105,9 +137,48 @@ That is because Flymake is designed to syntax check one file at a
 time.  We can't do that because CMake doesn't provide a way to
 build individual files (or at least we can't find one).
 Therefore, this advice converts the normal build failure error
-code (2) to a success code (0) to prevent a fatal Flymake
-shutdown."
-  (if (eq (ad-get-arg 0) 2) (ad-set-arg 0 0)))
+code (2 for `make`, 1 for Visual Studio) to a success code (0) to
+prevent a fatal Flymake shutdown."
+  (if (eq (ad-get-arg 0) 2) (ad-set-arg 0 0)) ; make
+  (if (eq (ad-get-arg 0) 1) (ad-set-arg 0 0)) ; Visual Studio
+  )
+
+(defun cmake-project--split-directory-path (path)
+  (let ((dir-agnostic-path (directory-file-name path)))
+    (cons
+     (file-name-directory dir-agnostic-path)
+     (file-name-as-directory (file-name-nondirectory dir-agnostic-path)))))
+
+;;;###autoload
+(defun cmake-project-configure-project (build-directory)
+  "Configure or reconfigure a CMake build tree.
+BUILD-DIRECTORY is the path to the build-tree directory.  If the
+directory does not already exist, it will be created.  The source
+directory is found automatically based on the current buffer."
+  (interactive
+   (let ((directory-parts (cmake-project--split-directory-path
+                           cmake-project-build-directory)))
+     (let ((root (car directory-parts))
+           (directory-name (cdr directory-parts)))
+       (list (read-directory-name
+              "Configure in directory: " root nil nil directory-name)))))
+  (let ((source-directory (cmake-project-find-root-directory))
+        (build-directory (file-name-as-directory build-directory)))
+    (unless (file-exists-p build-directory) (make-directory build-directory))
+    ;; Must force `default-directory' here as `compilation-start' has
+    ;; a bug in it. It is supposed to notice the `cd` command and
+    ;; adjust `default-directory' accordingly but it gets confused by
+    ;; spaces in the directory path, even when properly quoted.
+    ;;
+    ;; TODO: this isn't actually the directory we want. It needs the
+    ;; source directory.
+    (let ((default-directory build-directory))
+      (compilation-start
+       (concat
+        "cd " (shell-quote-argument (expand-file-name build-directory))
+        " && cmake " (shell-quote-argument
+                      (expand-file-name source-directory))))
+      (cmake-project--changed-build-directory build-directory))))
 
 ;;;###autoload
 (define-minor-mode cmake-project-mode
@@ -118,8 +189,11 @@ build tools such as the CompileCommand and Flymake."
   (cond
    ;; Enabling mode
    (cmake-project-mode
-    (set (make-local-variable 'compile-command)
-	 (cmake-project-current-build-command))
+
+    (make-local-variable 'cmake-project-build-directory)
+    (make-local-variable 'compile-command)
+
+    (cmake-project--changed-build-directory (cmake-project-find-build-directory))
 
     (ad-enable-advice
      'flymake-get-file-name-mode-and-masks 'around 'cmake-flymake-advice)
@@ -127,9 +201,13 @@ build tools such as the CompileCommand and Flymake."
      'flymake-post-syntax-check 'before 'cmake-flymake-post-syntax-check)
     (ad-activate 'flymake-get-file-name-mode-and-masks))
 
+    (autoload 'cmake-project-configure-project "cmake-project"
+      "Configure CMake project" t)
+
    ;; Disabling mode
    (t
     (kill-local-variable 'compile-command)
+    (kill-local-variable 'cmake-project-build-directory)
 
     (ad-disable-advice
      'flymake-post-syntax-check 'before 'cmake-flymake-post-syntax-check)
