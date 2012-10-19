@@ -42,7 +42,7 @@ Features
 
 # Configuring build tree #
 
-Use `M-x cmake-project-configure-project' to configure or reconfigure
+Use `M-x cmake-project-configure-project` to configure or reconfigure
 a CMake build tree.  The function finds the source automatically based
 on the current buffer.
 
