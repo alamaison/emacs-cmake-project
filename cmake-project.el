@@ -5,7 +5,7 @@
 ;; Author:  Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; Maintainer: Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
 ;; URL: http://github.com/alamaison/emacs-cmake-project
-;; Version: 0.4
+;; Version: 0.5
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -30,7 +30,6 @@
 
 ;;; Bugs/todo:
 
-;; - TODO: Provide command to configure build directory initially.
 ;; - TODO: Make binary directory confiurable
 ;; - TODO: Extract Flymake command from compile command to pick up
 ;;         any user changes to build directory
@@ -43,6 +42,7 @@
 ;; 0.2 - Made compatible with Marmalade
 ;; 0.3 - Bug fixes
 ;; 0.4 - Command to configure new CMake build tree
+;; 0.5 - Option to choose the generator when configuring
 ;;
 
 ;;; Code:
@@ -149,8 +149,22 @@ prevent a fatal Flymake shutdown."
      (file-name-directory dir-agnostic-path)
      (file-name-as-directory (file-name-nondirectory dir-agnostic-path)))))
 
+(defun cmake-project--available-generators ()
+  (let ((help-text (shell-command-to-string "cmake --help"))
+        (regexp (concat
+                 "The following generators are available on this platform:\n"
+                 "\\([^\\']*\\)\\'"))
+        (out))
+    (string-match regexp help-text)
+    (let ((gens-chunk (match-string 1 help-text)))
+      (while (string-match
+              "\\s-+\\([^=\n]+?\\)\\s-*=[^\n]+?\n\\([^\\']*\\)\\'" gens-chunk)
+        (setq out (add-to-list 'out (match-string 1 gens-chunk) 1))
+        (setq gens-chunk (match-string 2 gens-chunk)))
+      out)))
+
 ;;;###autoload
-(defun cmake-project-configure-project (build-directory)
+(defun cmake-project-configure-project (build-directory generator)
   "Configure or reconfigure a CMake build tree.
 BUILD-DIRECTORY is the path to the build-tree directory.  If the
 directory does not already exist, it will be created.  The source
@@ -161,7 +175,10 @@ directory is found automatically based on the current buffer."
      (let ((root (car directory-parts))
            (directory-name (cdr directory-parts)))
        (list (read-directory-name
-              "Configure in directory: " root nil nil directory-name)))))
+              "Configure in directory: " root nil nil directory-name)
+             (completing-read
+              "Generator (optional): "
+              (cmake-project--available-generators) nil t)))))
   (let ((source-directory (cmake-project-find-root-directory))
         (build-directory (file-name-as-directory build-directory)))
     (unless (file-exists-p build-directory) (make-directory build-directory))
@@ -177,7 +194,10 @@ directory is found automatically based on the current buffer."
        (concat
         "cd " (shell-quote-argument (expand-file-name build-directory))
         " && cmake " (shell-quote-argument
-                      (expand-file-name source-directory))))
+                      (expand-file-name source-directory))
+        (if (string= "" generator)
+            ""
+          (concat " -G " (shell-quote-argument generator)))))
       (cmake-project--changed-build-directory build-directory))))
 
 ;;;###autoload
