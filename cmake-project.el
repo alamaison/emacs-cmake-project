@@ -1,11 +1,11 @@
 ;;; cmake-project.el --- Integrates CMake build process with Emacs
 
-;; Copyright (C) 2012 Alexander Lamaison
+;; Copyright (C) 2012, 2013 Alexander Lamaison
 
-;; Author:  Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
-;; Maintainer: Alexander Lamaison <alexander.lamaison03@imperial.ac.uk>
+;; Author:  Alexander Lamaison <alexander.lamaison@gmail>
+;; Maintainer: Alexander Lamaison <alexander.lamaison@gmail>
 ;; URL: http://github.com/alamaison/emacs-cmake-project
-;; Version: 0.5
+;; Version: 0.6
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@
 ;; 0.3 - Bug fixes
 ;; 0.4 - Command to configure new CMake build tree
 ;; 0.5 - Option to choose the generator when configuring
+;; 0.6 - Fix bug configuring paths that do not have spaces
 ;;
 
 ;;; Code:
