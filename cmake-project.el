@@ -192,6 +192,13 @@ directory is found automatically based on the current buffer."
     (let ((default-directory build-directory))
       (compilation-start
        (concat
+         ;; HACK: force compilation-start to cd to default-directory
+         ;; by inserting dummy cd at front.  Without this, the old
+         ;; broken version may pick up quoted path without spaces and
+         ;; then assume the quotes are part of the path causing an
+         ;; error (see
+         ;; https://github.com/alamaison/emacs-cmake-project/issues/1)
+        "cd . && "
         "cd " (shell-quote-argument (expand-file-name build-directory))
         " && cmake " (shell-quote-argument
                       (expand-file-name source-directory))
