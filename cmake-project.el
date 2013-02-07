@@ -192,7 +192,7 @@ directory is found automatically based on the current buffer."
     (let ((default-directory build-directory))
       (compilation-start
        (concat
-        "cd " (shell-quote-argument (expand-file-name build-directory))
+        "cd " (expand-file-name build-directory)
         " && cmake " (shell-quote-argument
                       (expand-file-name source-directory))
         (if (string= "" generator)
