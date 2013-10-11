@@ -171,8 +171,9 @@ BUILD-DIRECTORY is the path to the build-tree directory.  If the
 directory does not already exist, it will be created.  The source
 directory is found automatically based on the current buffer."
   (interactive
-   (let ((directory-parts (cmake-project--split-directory-path
-                           cmake-project-build-directory)))
+   (let ((directory-parts
+          (when cmake-project-build-directory (cmake-project--split-directory-path
+                                               cmake-project-build-directory))))
      (let ((root (car directory-parts))
            (directory-name (cdr directory-parts)))
        (list (read-directory-name
