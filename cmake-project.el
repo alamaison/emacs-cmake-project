@@ -221,8 +221,10 @@ build tools such as the CompileCommand and Flymake."
 
     (make-local-variable 'cmake-project-build-directory)
     (make-local-variable 'compile-command)
-
-    (cmake-project--changed-build-directory (cmake-project-find-build-directory))
+	(let ((build-directory (if cmake-project-build-directory
+							   cmake-project-build-directory
+							 (cmake-project-find-build-directory))))
+	  (cmake-project--changed-build-directory build-directory))
 
     (ad-enable-advice
      'flymake-get-file-name-mode-and-masks 'around 'cmake-flymake-advice)
