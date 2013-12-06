@@ -5,7 +5,7 @@
 ;; Author:  Alexander Lamaison <alexander.lamaison@gmail>
 ;; Maintainer: Alexander Lamaison <alexander.lamaison@gmail>
 ;; URL: http://github.com/alamaison/emacs-cmake-project
-;; Version: 0.6
+;; Version: 0.7
 ;; Keywords: c cmake languages tools
 
 ;; This is free software: you can redistribute it and/or modify
@@ -44,6 +44,7 @@
 ;; 0.4 - Command to configure new CMake build tree
 ;; 0.5 - Option to choose the generator when configuring
 ;; 0.6 - Fix bug configuring paths that do not have spaces
+;; 0.7 - Pick up build directory from pre-set `cmake-project-build-directory'
 ;;
 
 ;;; Code:
