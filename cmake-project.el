@@ -166,11 +166,13 @@ prevent a fatal Flymake shutdown."
       out)))
 
 ;;;###autoload
-(defun cmake-project-configure-project (build-directory generator)
+(defun cmake-project-configure-project (build-directory generator &optional flags)
   "Configure or reconfigure a CMake build tree.
 BUILD-DIRECTORY is the path to the build-tree directory.  If the
 directory does not already exist, it will be created.  The source
-directory is found automatically based on the current buffer."
+directory is found automatically based on the current
+buffer. With a prefix argument additional CMake flags can be
+specified interactively."
   (interactive
    (let ((directory-parts
           (when cmake-project-build-directory (cmake-project--split-directory-path
@@ -181,7 +183,9 @@ directory is found automatically based on the current buffer."
               "Configure in directory: " root nil nil directory-name)
              (completing-read
               "Generator (optional): "
-              (cmake-project--available-generators) nil t)))))
+              (cmake-project--available-generators) nil t)
+             (if current-prefix-arg
+              (read-from-minibuffer "Additional CMake flags (optional): "))))))
   (let ((source-directory (cmake-project-find-root-directory))
         (build-directory (file-name-as-directory build-directory)))
     (unless (file-exists-p build-directory) (make-directory build-directory))
@@ -203,8 +207,10 @@ directory is found automatically based on the current buffer."
          ;; https://github.com/alamaison/emacs-cmake-project/issues/1)
         "cd . && "
         "cd " (shell-quote-argument (expand-file-name build-directory))
-        " && cmake " (shell-quote-argument
-                      (expand-file-name source-directory))
+        " && cmake "
+        (unless (string= "" flags) (concat flags " "))
+        (shell-quote-argument
+         (expand-file-name source-directory))
         (if (string= "" generator)
             ""
           (concat " -G " (shell-quote-argument generator)))))
