@@ -214,7 +214,7 @@ directory is found automatically based on the current buffer."
 (define-minor-mode cmake-project-mode
   "Minor mode that integrates a CMake-based project with Emacs
 build tools such as the CompileCommand and Flymake."
-  :lighter "CMake"
+  :lighter " CMake"
 
   (cond
    ;; Enabling mode
