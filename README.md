@@ -22,7 +22,7 @@ and the package manager to install it.
 
 Either auto-load the mode in your init file by adding the line:
 
-    (autoload 'cmake-project-mode "cmake-project")
+    (autoload 'cmake-project-mode "cmake-project" nil t)
 
 Or simply require the library:
 
