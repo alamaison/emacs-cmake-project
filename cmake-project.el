@@ -239,9 +239,6 @@ build tools such as the CompileCommand and Flymake."
      'flymake-post-syntax-check 'before 'cmake-flymake-post-syntax-check)
     (ad-activate 'flymake-get-file-name-mode-and-masks))
 
-    (autoload 'cmake-project-configure-project "cmake-project"
-      "Configure CMake project" t)
-
    ;; Disabling mode
    (t
     (kill-local-variable 'compile-command)
