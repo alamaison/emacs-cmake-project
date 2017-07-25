@@ -213,7 +213,11 @@ specified interactively."
          (expand-file-name source-directory))
         (if (string= "" generator)
             ""
-          (concat " -G " (shell-quote-argument generator)))))
+          (concat " -G " (shell-quote-argument
+			  (if (string= (substring generator (- (length generator) 7)) " [arch]")
+			      (substring generator 0 (- (length generator) 7))
+			    (concat generator ""))
+			  )))))
       (cmake-project--changed-build-directory build-directory))))
 
 ;;;###autoload
