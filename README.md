@@ -67,6 +67,7 @@ on windows and you want to set the default architecture of your builds
 to something else that can be done like this
 
 `(setq cmake-project-architecture "Win64") ;; Sets the architecture to 64bit`
+
 `(setq cmake-project-architecture "ARM") ;; Sets the architecture for arm`
 
 # Other Customizations #
