@@ -61,6 +61,19 @@ Flymake's typical behaviour which builds only the file for the buffer
 in question.  CMake doesn't provide a way to build one file at a time
 (or at least we don't know of a way) so we must build everything.
 
+# Changing the architecture of the build in Windows
+By default cmake builds for 32bit architecture on windows.  If you are
+on windows and you want to set the default architecture of your builds
+to something else that can be done like this
+
+`(setq cmake-project-architecture "Win64") ;; Sets the architecture to 64bit`
+`(setq cmake-project-architecture "ARM") ;; Sets the architecture for arm`
+
+# Other Customizations #
+
+You can also set the build directory to other directories like so
+`(setq cmake-project-default-build-dir-name "build\/")`
+
 
 [1]: http://www.cmake.org/CMakeDocs/cmake-mode.el
 [2]: http://marmalade-repo.org/
