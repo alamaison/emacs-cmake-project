@@ -32,10 +32,13 @@ Then use `M-x cmake-project-mode` in any buffer you wish to use the
 mode in.  Alternatively, start the mode automatically for any C/C++
 file whose directory includes a `CMakeLists.txt`:
 
-    (defun maybe-cmake-project-hook ()
-      (if (file-exists-p "CMakeLists.txt") (cmake-project-mode)))
-    (add-hook 'c-mode-hook 'maybe-cmake-project-hook)
-    (add-hook 'c++-mode-hook 'maybe-cmake-project-hook)
+    (defun maybe-cmake-project-mode ()
+      (if (or (file-exists-p "CMakeLists.txt")
+              (file-exists-p (expand-file-name "CMakeLists.txt" (car (project-roots (project-current))))))
+          (cmake-project-mode)))
+
+    (add-hook 'c-mode-hook 'maybe-cmake-project-mode)
+    (add-hook 'c++-mode-hook 'maybe-cmake-project-mode)
 
 Features
 ----------
