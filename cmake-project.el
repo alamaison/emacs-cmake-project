@@ -178,14 +178,15 @@ prevent a fatal Flymake shutdown."
 (defun cmake-project--available-generators ()
   (let ((help-text (shell-command-to-string "cmake --help"))
         (regexp (concat
-                 "The following generators are available on this platform:\n"
+                 "The following generators are available on this platform.*\n"
                  "\\([^\\']*\\)\\'"))
         (out))
     (string-match regexp help-text)
     (let ((gens-chunk (match-string 1 help-text)))
       (while (string-match
-              "\\s-+\\([^=\n]+?\\)\\s-*=[^\n]+?\n\\([^\\']*\\)\\'" gens-chunk)
-        (setq out (add-to-list 'out (match-string 1 gens-chunk) 1))
+              "\\s-+\\([^=\n]+?\\)\\n?\\s-*=[^\n]+?\n\\([^\\']*\\)\\'" gens-chunk)
+        (if (not (string-match "\\s*" gens-chunk))
+          (setq out (add-to-list 'out (match-string 1 gens-chunk) 1)))
         (setq gens-chunk (match-string 2 gens-chunk)))
       out)))
 
