@@ -72,6 +72,17 @@ names to a build directory and code generator.")
   :type 'directory
   :group 'data)
 
+(defconst cmake-project-invalid-src-rootdir 'invalid-source-project-root
+  "A value that signals that the CMake project's project source root
+directory is invalid.")
+
+(defvar cmake-project-src-rootdir cmake-project-invalid-src-rootdir
+  "The (default) CMake project source root directory.")
+
+;; Is the project source root directory valid?
+(defun cmake-project--valid-src-rootdir ()
+  (and (not (eq cmake-project-src-rootdir cmake-project-invalid-src-rootdir))
+       cmake-project-src-rootdir))
 
 ;; CMake capabilities record:
 (defun cmake-project--make-capability
@@ -244,8 +255,7 @@ directories to search for the top-level CMakeLists.txt:
 (c) The directory component of the buffer's file name,
 (d) The current dired directory name."
 
-  (or (and (boundp 'cmake-project-src-rootdir)
-           cmake-project-src-rootdir)
+  (or (cmake-project--valid-src-rootdir)
       (cl-flet ((parent-directory (dir)
                   (let ((parent (file-name-directory (directory-file-name dir))))
                     (unless (equal parent dir) parent))))
@@ -276,7 +286,7 @@ directories to search for the top-level CMakeLists.txt:
 
 
 (defun cmake-project--changed-build-directory (new-build-directory build-config)
-  (unless (boundp 'cmake-project-src-rootdir)
+  (when (eq cmake-project-src-rootdir cmake-project-invalid-src-rootdir)
     (error "cmake-project--changed-build-directory: Source root directory not set."))
   (when (or (not new-build-directory) (string= "" new-build-directory))
     (error "cmake-project--changed-build-directory: Build directory was not set or empty."))
@@ -300,7 +310,7 @@ build directory BUILD-DIRECTORY."
 ;; "cmake\\s-+--build\\s-+\\(?:\"\\([^\"]*\\)\\\"\\|\\(\\S-*\\)\\)"
 
 (defun cmake-project-flymake-init ()
-  (unless (boundp 'cmake-project-src-rootdir)
+  (when (eq cmake-project-src-rootdir cmake-project-invalid-src-rootdir)
     (error "cmake-project-flymake-init: Source root directory not set."))
   (let* ((memo (or (cmake-project--get-source-directory-memo cmake-project-src-rootdir)
                    (error "cmake-project-flymake-init: Source root directory not found.")))
@@ -405,7 +415,7 @@ new source directory MUST EXIST."
               (apply '+ (mapcar (lambda (buf)
                                   (with-current-buffer buf
                                     (if (and cmake-project-mode
-                                             (boundp 'cmake-project-src-rootdir)
+                                             (cmake-project--valid-src-rootdir)
                                              (string= original-source-dir
                                                       cmake-project-src-rootdir))
                                         (progn
@@ -424,12 +434,12 @@ new source directory MUST EXIST."
 
 (defun cmake-project-set-build-directory (new-build-dir)
   (interactive
-   (let* ((source-dir (or (and (boundp 'cmake-project-src-rootdir) cmake-project-src-rootdir)
+   (let* ((source-dir (or (cmake-project--valid-src-rootdir)
                           (error "cmake-project-set-build-directory: Source root not set.")))
           (memo (cmake-project--get-source-directory-memo source-dir))
           (old-build-dir (or (and memo (cmake-project--memo-build-dir memo))
                              source-dir))
-          (new-build-dir (if (boundp 'cmake-project-src-rootdir)
+          (new-build-dir (if (cmake-project--valid-src-rootdir)
                              (read-directory-name "CMake build directory: " old-build-dir nil t nil)
                            (error "cmake-project-set-architecture: Source root not set."))))
      (list new-build-dir)))
@@ -452,7 +462,7 @@ new source directory MUST EXIST."
     
 (defun cmake-project-build-directory ()
   "Return the project's build directory"
-  (let* ((source-dir (or (and (boundp 'cmake-project-src-rootdir) cmake-project-src-rootdir)
+  (let* ((source-dir (or (cmake-project--valid-src-rootdir)
                          (error "cmake-project-set-build-directory: Source root not set.")))
          (memo (cmake-project--get-source-directory-memo source-dir)))
     (cmake-project--memo-build-dir memo)))
@@ -460,7 +470,7 @@ new source directory MUST EXIST."
 (defun cmake-project-set-architecture (arch)
   "Set the project's architecture (\"-A\") configuration argument."
   (interactive
-   (let ((new-arch (if (boundp 'cmake-project-src-rootdir)
+   (let ((new-arch (if (cmake-project--valid-src-rootdir)
                        (read-string "CMake architecture argument: " "" t nil)
                      (error "cmake-project-set-architecture: Source root not set."))))
      (list new-arch)))
@@ -470,7 +480,7 @@ new source directory MUST EXIST."
 (defun cmake-project-set-toolset (toolset)
   "Set the project's toolset (\"-T\") configuration argument."
   (interactive
-   (let ((new-toolset (if (boundp 'cmake-project-src-rootdir)
+   (let ((new-toolset (if (cmake-project--valid-src-rootdir)
                           (read-string "CMake toolset argument: " "" t nil)
                         (error "cmake-project-set-toolset: Source root not set."))))
      (list new-toolset)))
@@ -480,7 +490,7 @@ new source directory MUST EXIST."
   "Set the CMake project's additional configuration arguments,
 e.g., \"-D\" options."
   (interactive
-   (let ((new-flags (if (boundp 'cmake-project-src-rootdir)
+   (let ((new-flags (if (cmake-project--valid-src-rootdir)
                         (read-string "CMake additional configuration flags: " "" t nil)
                      (error "cmake-project-set-configure-args: Source root not set."))))
      (list new-flags)))
@@ -489,7 +499,7 @@ e.g., \"-D\" options."
 (defun cmake-project-set-build-config (config)
   "Set the CMake project's build configuration (Release, Debug, ...)"
   (interactive
-   (let* ((source-dir (or (and (boundp 'cmake-project-src-rootdir) cmake-project-src-rootdir)
+   (let* ((source-dir (or (cmake-project--valid-src-rootdir)
                           (error "cmake-project-set-build-config: Source root not set.")))
           (memo (cmake-project--get-source-directory-memo source-dir))
           (old-config (or (and memo (cmake-project--memo-build-config memo))
@@ -648,8 +658,7 @@ build tools such as the CompileCommand and Flymake."
               (build-dir  (or (and memo (cmake-project--memo-build-dir memo))
                               ;; Grab the outer binding for cmake-project-build-directory,
                               ;; if the user provided it.
-                              (and (boundp 'cmake-project-build-directory)
-                                   cmake-project-build-directory)
+                              (cmake-project--valid-src-rootdir)
                               ;; before we use the default directory
                               (prompt-build-dir source-dir)))
               (build-config (or (and memo (cmake-project--memo-build-config memo))
